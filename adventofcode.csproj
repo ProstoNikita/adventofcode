@@ -7,8 +7,12 @@
     <UseAppHost>false</UseAppHost>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AngleSharp" Version="0.14.0" />
-    <PackageReference Include="AngleSharp.Css" Version="0.14.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.12.0-3.final" />
+    <PackageReference Include="AngleSharp" Version="0.14.0"/>
+    <PackageReference Include="AngleSharp.Css" Version="0.14.0"/>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.12.0-3.final"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="2015\**\*.*"/>
   </ItemGroup>
 </Project>
