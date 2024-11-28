@@ -11,7 +11,7 @@ using System.Text;
 class Solution : Solver {
 
     public object PartOne(string input) {
-        return new MapChecker().Calculate(input, MapChecker.Map).Count;
+        return new MapChecker().Calculate(input, 0).Count;
     }
 
     public object PartTwo(string input) {
@@ -20,10 +20,12 @@ class Solution : Solver {
 }
 
 public class MapChecker {
-    public static HashSet<(int, int)> Map = [];
-    public static HashSet<(int, int)> Map2 = [];
+    private readonly HashSet<(int, int)> m_map = [];
+    private readonly HashSet<(int, int)> m_map2 = [];
 
-    public HashSet<(int, int)> Calculate(string input, HashSet<(int, int)> map) {
+    public HashSet<(int, int)> Calculate(string input, int mapId) {
+        var map = mapId == 0 ? m_map : m_map2;
+        
         var directions = input.ToCharArray();
         map.Add((0, 0));
         var pos = (0, 0);
@@ -49,11 +51,15 @@ public class MapChecker {
     }
 
     public HashSet<(int, int)> Calculate2(string input) {
-        Calculate(new string(input.Where((c,i) => i % 2 == 0).ToArray()), Map);
-        Calculate(new string(input.Where((c,i) => i % 2 == 1).ToArray()), Map2);
-        Map.IntersectWith(Map2);
+        var string1 = new string(input.Where((_, i) => i % 2 == 0).ToArray());
+        var string2 = new string(input.Where((_, i) => i % 2 == 1).ToArray());
+        
+        Calculate(string1, 0);
+        Calculate(string2, 1);
 
-        return Map;
+        m_map.UnionWith(m_map2);
+        
+        return m_map;
     }
     
     
