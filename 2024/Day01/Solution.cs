@@ -11,10 +11,34 @@ using System.Text;
 class Solution : Solver {
 
     public object PartOne(string input) {
-        return 0;
+        var list1 = new List<int>();
+        var list2 = new List<int>();
+
+        foreach (var numbers in input.Split('\n')) {
+            var nums = numbers.Split(' ').Where(str => !string.IsNullOrWhiteSpace(str)).Select(int.Parse).ToList();
+            list1.Add(nums[0]);
+            list2.Add(nums[1]);
+        }
+        
+        list1.Sort();
+        list2.Sort();
+
+        return list1.Select((t, i) => Math.Abs(t - list2[i])).Sum();
     }
 
     public object PartTwo(string input) {
-        return 0;
+        var list1 = new List<int>();
+        var list2 = new List<int>();
+
+        foreach (var numbers in input.Split('\n')) {
+            var nums = numbers.Split(' ').Where(str => !string.IsNullOrWhiteSpace(str)).Select(int.Parse).ToList();
+            list1.Add(nums[0]);
+            list2.Add(nums[1]);
+        }
+        
+        list1.Sort();
+        list2.Sort();
+
+        return list1.Select(value => value * list2.FindAll(i => i == value).Count).Sum();
     }
 }
