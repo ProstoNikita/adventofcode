@@ -19,28 +19,29 @@ class Solution : Solver {
             Console.WriteLine(instruction);
             manager.AddToTree(instruction);
         }
-        manager.CalculateCircuit();
-        manager.PrintCircuit();
-
         return manager.GetValue("a");
     }
 
     public object PartTwo(string input) {
-        return 0;
+        var manager = new CircuitManager();
+        var lines = input.Split('\n');
+        foreach (var line in lines) {
+            var instruction = manager.ParseInstruction(line);
+            if (instruction.Output == "b") {
+                instruction.A.Value = 16076;
+            }
+            manager.AddToTree(instruction);
+        }
+        return manager.GetValue("a");
     }
 }
 
 public class CircuitManager {
-    private Dictionary<string, ushort> circuit = new();
-    private InstructionTree m_instructionTree;
+    private readonly Dictionary<string, ushort> circuit = new();
+    private readonly InstructionTree m_instructionTree;
     
     public CircuitManager() {
         m_instructionTree = new InstructionTree(this);
-    }
-
-    public ushort GetValue(string wireName) {
-        circuit.TryGetValue(wireName, out var value);
-        return value;
     }
 
     public void PrintCircuit() {
@@ -55,6 +56,42 @@ public class CircuitManager {
 
     public void CalculateCircuit() {
         m_instructionTree.CalculateWires();
+    }
+    
+    public ushort GetValue(string wireName) {
+        // Check if the value is already computed
+        if (circuit.TryGetValue(wireName, out var value)) {
+            return value;
+        }
+
+        // Retrieve the instruction corresponding to the wire
+        if (!m_instructionTree.TryGetInstruction(wireName, out var instruction)) {
+            throw new ArgumentException($"Wire {wireName} has no associated instruction.");
+        }
+
+        unchecked {
+            // Recursively evaluate the instruction based on the operation
+            ushort result = instruction.Instruction.Operation switch {
+                Operation.NOT => (ushort)~GetValue(instruction.Instruction.A.Name),
+                Operation.AND => (ushort)(ResolveInput(instruction.Instruction.A) &
+                                          ResolveInput(instruction.Instruction.B)),
+                Operation.OR => (ushort)(ResolveInput(instruction.Instruction.A) |
+                                         ResolveInput(instruction.Instruction.B)),
+                Operation.LSHIFT => (ushort)(GetValue(instruction.Instruction.A.Name) <<
+                                             instruction.Instruction.B.Value),
+                Operation.RSHIFT => (ushort)(GetValue(instruction.Instruction.A.Name) >>
+                                             instruction.Instruction.B.Value),
+                Operation.DIRECTVALUE => instruction.Instruction.A.Value,
+                Operation.DIRECTWIRE => GetValue(instruction.Instruction.A.Name),
+                _ => throw new InvalidOperationException("Unknown operation.")
+            };
+            circuit[wireName] = result;
+            return result;
+        }
+    }
+
+    private ushort ResolveInput(InstructionToken token) {
+        return token.Name == null ? token.Value : GetValue(token.Name);
     }
 
     public void ApplyInstruction(Instruction instruction) {
@@ -240,8 +277,8 @@ public record InstructionToken {
 
 public class InstructionTree {
     private readonly CircuitManager m_manager;
-    private readonly IDictionary<string, WireNode> m_nodes = new Dictionary<string, WireNode>();
-    private readonly IList<string> m_rootWires = new List<string>();
+    private readonly Dictionary<string, WireNode> m_nodes = new();
+    private readonly List<string> m_rootWires = [];
 
     public InstructionTree(CircuitManager circuitManager) {
         m_manager = circuitManager;
@@ -292,8 +329,8 @@ public class InstructionTree {
 
         while (queue.Count > 0) {
             var wire = queue.Dequeue();
-            Console.WriteLine(wire);
             var node = m_nodes[wire];
+            Console.WriteLine(wire);
 
             if (node.Instruction == null) {
                 node.IsVisited = true;
@@ -301,6 +338,11 @@ public class InstructionTree {
             }
 
             if (node.Parents.Any(p => !m_nodes[p].IsVisited)) {
+                node.TryCount++;
+                if (node.TryCount >= 3) {
+                    node.IsVisited = true;
+                    continue;
+                }
                 queue.Enqueue(node.Name);
                 continue;
             }
@@ -313,12 +355,18 @@ public class InstructionTree {
             node.IsVisited = true;
         }
     }
+
+    public bool TryGetInstruction(string wireName, out WireNode o) {
+        return m_nodes.TryGetValue(wireName, out o);
+    }
 }
 
 public record WireNode {
-    public bool IsVisited { get; set; } = false;
+    public bool IsVisited { get; set; }
     public string Name { get; set; }
     public Instruction Instruction { get; set; }
+    
+    public int TryCount { get; set; }
     public IList<string> Children { get; set; }  = new List<string>();
     
     public IList<string> Parents { get; set; } = new List<string>();
