@@ -1,5 +1,3 @@
-using AngleSharp.Html;
-
 namespace AdventOfCode.Y2015.Day07;
 
 using System;
@@ -41,7 +39,7 @@ public class CircuitManager {
     private readonly InstructionTree m_instructionTree;
     
     public CircuitManager() {
-        m_instructionTree = new InstructionTree(this);
+        m_instructionTree = new InstructionTree();
     }
 
     public void PrintCircuit() {
@@ -52,10 +50,6 @@ public class CircuitManager {
 
     public void AddToTree(Instruction instruction) {
         m_instructionTree.AddInstruction(instruction);
-    }
-
-    public void CalculateCircuit() {
-        m_instructionTree.CalculateWires();
     }
     
     public ushort GetValue(string wireName) {
@@ -276,19 +270,9 @@ public record InstructionToken {
 }
 
 public class InstructionTree {
-    private readonly CircuitManager m_manager;
     private readonly Dictionary<string, WireNode> m_nodes = new();
-    private readonly List<string> m_rootWires = [];
-
-    public InstructionTree(CircuitManager circuitManager) {
-        m_manager = circuitManager;
-    }
 
     public void AddInstruction(Instruction instruction) {
-        if (instruction.Operation == Operation.DIRECTVALUE) {
-            m_rootWires.Add(instruction.Output);
-        }
-
         if (m_nodes.TryGetValue(instruction.Output, out var node)) {
             node.Instruction = instruction;
         } else {
@@ -320,55 +304,14 @@ public class InstructionTree {
         }
     }
 
-
-    public void CalculateWires() {
-        var queue = new Queue<string>();
-        foreach (var wire in m_rootWires) {
-            queue.Enqueue(wire);
-        }
-
-        while (queue.Count > 0) {
-            var wire = queue.Dequeue();
-            var node = m_nodes[wire];
-            Console.WriteLine(wire);
-
-            if (node.Instruction == null) {
-                node.IsVisited = true;
-                continue;
-            }
-
-            if (node.Parents.Any(p => !m_nodes[p].IsVisited)) {
-                node.TryCount++;
-                if (node.TryCount >= 3) {
-                    node.IsVisited = true;
-                    continue;
-                }
-                queue.Enqueue(node.Name);
-                continue;
-            }
-            
-            foreach (var childWire in node.Children) {
-                queue.Enqueue(childWire);
-            }
-            
-            m_manager.ApplyInstruction(node.Instruction);
-            node.IsVisited = true;
-        }
-    }
-
     public bool TryGetInstruction(string wireName, out WireNode o) {
         return m_nodes.TryGetValue(wireName, out o);
     }
 }
 
 public record WireNode {
-    public bool IsVisited { get; set; }
     public string Name { get; set; }
     public Instruction Instruction { get; set; }
-    
-    public int TryCount { get; set; }
-    public IList<string> Children { get; set; }  = new List<string>();
-    
-    public IList<string> Parents { get; set; } = new List<string>();
-    
+    public List<string> Children { get; } = [];
+    public List<string> Parents { get; } = [];
 }

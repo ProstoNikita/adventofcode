@@ -24,10 +24,6 @@ public class Counter {
     public int Floor { get; set; } = 0;
     public bool IsNegative => Count == -1;
 
-    public Counter() {
-        
-    }
-
     public Counter CountLisp(char[] input) {
         foreach (var chara in input) {
             switch (chara)
