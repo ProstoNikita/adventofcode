@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="2015/**/*.*">
+    <Content Include="20*/**/*.*">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
