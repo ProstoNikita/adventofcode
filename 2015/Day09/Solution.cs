@@ -16,13 +16,17 @@ class Solution : Solver {
         foreach (var line in input.Split('\n')) {
             graph.ParseSaveCity(line);
         }
-        
-        Console.WriteLine(graph.DFS());
-        return graph.DFS();
+
+        return graph.CalculateMinCost();
     }
 
     public object PartTwo(string input) {
-        return 0;
+        var graph = new CityGraph();
+        foreach (var line in input.Split('\n')) {
+            graph.ParseSaveCity(line);
+        }
+
+        return graph.CalculateMaxCost();
     }
 }
 
@@ -50,34 +54,75 @@ public class CityGraph {
         cityA.Paths[cityB] = weight;
         cityB.Paths[cityA] = weight;
     }
-    
-    public
 
-    public int DFS(string start = "London") {
-        var stack = new Stack<City>();
-        stack.Push(m_cities[start]);
-        m_cities[start].ShortestPathLength = 0;
+    public int CalculateMinCost() {
+        var perm = GetPermutations(m_cities.Values.ToList(), m_cities.Values.Count);
 
-        while (stack.Count != 0) {
-            var current = stack.Pop();
-            foreach (var currentPath in current.Paths.Where(currentPath =>
-                         currentPath.Key.ShortestPathLength > current.ShortestPathLength + currentPath.Value)) {
-                currentPath.Key.ShortestPathLength = current.ShortestPathLength + currentPath.Value;
-                stack.Push(currentPath.Key);
+        var min = int.MaxValue;
+        var noPath = false;
+        
+        foreach (var list in perm) {
+            int curr = 0;
+            for (int i = 0; i < list.Count - 1; i++) {
+                if (list[i].Paths.TryGetValue(list[i + 1], out var value)) {
+                    if (curr + value > min) {
+                        noPath = true;
+                        break;
+                    }
+
+                    curr += value;
+                } else {
+                    noPath = true;
+                    break;
+                }
+            }
+
+            if (noPath) {
+                noPath = false;
+            } else {
+                min = Math.Min(min, curr);
             }
         }
 
-        var values = m_cities.Values.ToList();
-        values.Sort((city, city1) => city.ShortestPathLength < city1.ShortestPathLength ? -1 : 1);
+        return min;
+    }
+    
+    public int CalculateMaxCost() {
+        var perm = GetPermutations(m_cities.Values.ToList(), m_cities.Values.Count);
+
+        var max = 0;
+        var noPath = false;
         
-        return values[1].ShortestPathLength;
+        foreach (var list in perm) {
+            int curr = 0;
+            for (int i = 0; i < list.Count - 1; i++) {
+                if (list[i].Paths.TryGetValue(list[i + 1], out var value)) {
+                    curr += value;
+                } else {
+                    noPath = true;
+                    break;
+                }
+            }
+
+            if (noPath) {
+                noPath = false;
+            } else {
+                max = Math.Max(max, curr);
+            }
+        }
+
+        return max;
+    }
+
+    static IEnumerable<List<T>> GetPermutations<T>(List<T> list, int length) {
+        if (length == 1) return list.Select(t => new List<T> { t });
+        return GetPermutations(list, length - 1)
+            .SelectMany(t => list.Where(e => !t.Contains(e)),
+                (t1, t2) => t1.Concat(new List<T> { t2 }).ToList());
     }
 }
 
 public class City {
-    public int ShortestPathLength { get; set; } = int.MaxValue;
     public string Name { get; set; }
     public Dictionary<City, int> Paths { get; } = new();
-    
-    public Dictionary<City, int> ShortestPathLengths { get; } = new();
 }
