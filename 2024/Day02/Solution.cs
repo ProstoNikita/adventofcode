@@ -10,50 +10,76 @@ using System.Text;
 [ProblemName("Red-Nosed Reports")]
 class Solution : Solver {
     public object PartOne(string input) {
-        return input.Split('\n').Select(x => x.Split(' ').Select(int.Parse))
-            .Select(x => CheckIfReportSafe(x, 0))
-            .Count(x => x);
+        return input.Split('\n')
+            .Select(x => x.Split(' ').Select(int.Parse).ToList())
+            .Count(x => IsReportSafe(x));
     }
 
     public object PartTwo(string input) {
-        return input.Split('\n').Select(x => x.Split(' ').Select(int.Parse))
-            .Select(x => CheckIfReportSafe(x, 1))
-            .Count(x => x);
+        return input.Split('\n')
+            .Select(x => x.Split(' ').Select(int.Parse).ToList())
+            .Count(x => IsReportSafe(x, 1));
     }
 
-    private static bool CheckIfReportSafe(IEnumerable<int> report, int errorTolerance = 0) {
-        var enumerable = report.ToList();
-        var errors = new bool[enumerable.Count];
-        
-        var direction = Math.Sign(enumerable[0] - enumerable[1]);
-        for (var i = 1; i < enumerable.Count - 1; i++) {
-            if (direction != 0) {
-                break;
+    private static bool IsReportSafe(List<int> report, int errorTolerance = 0) {
+        var result = false;
+        if (errorTolerance > 0) {
+            for (int i = 0; i < report.Count; i++) {
+                result |= IsReportSafe(RemoveOneElement(report, i), --errorTolerance);
             }
-            
-            errors[i - 1] = true;
-            if (errors.Count(x => x) > errorTolerance) {
-                return false;
-            }
-            direction = Math.Sign(enumerable[i] - enumerable[i + 1]);
+            return result;
         }
         
-        for (var i = 0; i < enumerable.Count - 1; i++) {
-            var diff = enumerable[i] - enumerable[i + 1];
-            
-            if (Math.Abs(diff) > 3) {
-                errors[i] = true;
-            }
+        var reduce = new List<(int, int)>();
+        for (int i = 0; i < report.Count - 1; i++) {
+            var reduction = report[i] - report[i + 1];
+            reduce.Add((Math.Abs(reduction), Math.Sign(reduction)));
+        }
 
-            if (Math.Sign(diff) != direction) {
-                errors[i] = true;
-            }
-
-            if (errors.Count(x => x) > errorTolerance) {
+        for (int i = 0; i < reduce.Count - 1; i++) {
+            if (reduce[i].Item2 == 0 || reduce[i + 1].Item2 == 0) {
                 return false;
             }
+
+            if (reduce[i].Item1 > 3) {
+                return false;
+            }
+
+            if (reduce[i + 1].Item1 > 3) {
+                return false;
+            }
+
+            if (reduce[i].Item2 != reduce[i + 1].Item2) {
+                return false;
+            }
+            
         }
 
         return true;
+
+        // for (int i = 0; i < reduce.Count; i++) {
+        //     if (reduce[i].Item1 > 3 || reduce[i].Item1 == 0) {
+        //         if (errorTolerance == 0) return false;
+        //         return IsReportSafe(RemoveOneElement(report, i), errorTolerance - 1) ||
+        //                IsReportSafe(RemoveOneElement(report, i + 1), errorTolerance - 1);
+        //     }
+        //
+        //     if (i + 1 >= reduce.Count) {
+        //         continue;
+        //     }
+        //
+        //     if (reduce[i].Item2 == reduce[i + 1].Item2 && reduce[i + 1].Item2 != 0) {
+        //         continue;
+        //     }
+        //
+        //     if (errorTolerance == 0) return false;
+        //     return IsReportSafe(RemoveOneElement(report, i), errorTolerance - 1) ||
+        //            IsReportSafe(RemoveOneElement(report, i + 1), errorTolerance - 1);
+        // }
+        //
+        // return true;
     }
+
+    private static List<int> RemoveOneElement(List<int> list, int index) =>
+        list.Take(index).Concat(list.Skip(index + 1)).ToList();
 }
