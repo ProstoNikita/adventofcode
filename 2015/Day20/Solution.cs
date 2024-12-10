@@ -12,49 +12,61 @@ class Solution : Solver {
 
     public object PartOne(string input) {
         var target = long.Parse(input);
-        var result = 0L;
-        var count = 0;
-        
-        while (result * 10 < target) {
-            count++;
-            result = CalculateSieve(count);
-        }
-        
-        return count;
+        // var result = 0L;
+        // var count = 0;
+        //
+        // while (result * 10 < target) {
+        //     count++;
+        //     result = CalculateSieve(count);
+        // }
+        //
+        // return count;
+        return StepByStepFind(target, 10);
     }
 
-    private int CalculateSieve(int n, int limit = -1) {
+    //For some reason Limit doesn't work, doing different stuff
+    private int CalculateSieve(int n) {
         var sum = 0;
-        var iterations = 1;
+
         for (var i = 1; i <= Math.Sqrt(n); i++)
         {
-            if (limit != -1 && iterations >= limit)
-                break;
-
             if (n % i != 0)
                 continue;
 
             sum += i;
-            iterations++;
             if (n / i == i)
                 continue;
 
             sum += n / i;
-            iterations++;
         }
         return sum;
     }
 
+    private int StepByStepFind(long target, int presentPrice, int limit = 100000000) {
+        var houses = new int[1000000];
+
+        for (int i = 0; i < houses.Length; i++) {
+            var margin = i;
+            var step = 0;
+
+            while (margin < houses.Length && step < limit) {
+                houses[margin] += presentPrice * i;
+                margin += i;
+                step++;
+            }
+        }
+
+        foreach (var presents in houses) {
+            if (presents > target) {
+                return houses.ToList().IndexOf(presents);
+            }
+        }
+        return -1;
+    }
+
     public object PartTwo(string input) {
         var target = long.Parse(input);
-        var result = 0L;
-        var count = 0;
         
-        while (result * 11 < target) {
-            count++;
-            result = CalculateSieve(count, 50);
-        }
-        
-        return count;
+        return StepByStepFind(target, 11, 50);
     }
 }
