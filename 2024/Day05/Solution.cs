@@ -62,33 +62,52 @@ class Solution : Solver {
             if (!m_incorrect[l]) {
                 continue;
             }
-            
-            
-            var fix = false;
-            while (!fix) {
-                for (var i = 0; i < m_toCheck[l].Count; i++) {
-                    if (!m_queue.ContainsKey(m_toCheck[l][i])) {
+
+            var values = m_toCheck[l];
+            var used = new bool[values.Count];
+            var newOrder = new List<int>();
+
+            foreach (var unused in values)
+            {
+                for (var j = 0; j < values.Count; j++)
+                {
+                    var value = values[j];
+                    if (used[j]) {
                         continue;
                     }
 
-                    var order = m_queue[m_toCheck[l][i]];
-                    fix = true;
-                    for (int j = i - 1; j >= 0; j--) {
-                        if (!order.Contains(m_toCheck[l][j])) {
-                            continue;
-                        }
-
-                        (m_toCheck[l][i], m_toCheck[l][j]) = (
-                            m_toCheck[l][j], m_toCheck[l][i]);
-                        fix = false;
-                        break;
+                    if (!ValidateInt(values, j, used)) {
+                        continue;
                     }
+                    
+                    newOrder.Add(value);
+                    used[values.IndexOf(value)] = true;
+                    break;
                 }
             }
+
+            m_toCheck[l] = newOrder;
+        }
+        //
+        // m_toCheck.Where((c) => m_incorrect[m_toCheck.IndexOf(c)]).ToList().ForEach(c => {
+        //     c.ForEach(Console.WriteLine);
+        //     Console.WriteLine("------");
+        // });
+
+        return m_incorrect.Select((t, i) => !t ? 0 : m_toCheck[i][(m_toCheck[i].Count) / 2]).Sum();
+    }
+
+    public bool ValidateInt(List<int> values, int pos, bool[] used) {
+        foreach (var valueToCompare in values) {
+            if (used[values.IndexOf(valueToCompare)]) continue;
             
+            if (!m_queue.TryGetValue(valueToCompare, out var value1)) {
+                continue;
+            }
+
+            if (value1.Contains(values[pos])) return false;
         }
 
-        
-        return m_incorrect.Select((t, i) => !t ? 0 : m_toCheck[i][(m_toCheck[i].Count) / 2]).Sum();
+        return true;
     }
 }
