@@ -2,10 +2,7 @@ namespace AdventOfCode.Y2015.Day21;
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
-using System.Text.RegularExpressions;
-using System.Text;
 
 [ProblemName("RPG Simulator 20XX")]
 class Solution : Solver {
@@ -75,7 +72,25 @@ class Solution : Solver {
     }
 
     public object PartTwo(string input) {
-        return 0;
+        var max = 0;
+        var permutations = CalculatePermutations();
+        
+        foreach (var items in permutations) {
+            foreach (var item in items) {
+                Hero.Add(item);
+            }
+
+            if (!DoesHeroWin(Hero, Boss) && max < Hero.Items.Sum(x => x.Cost)) {
+                Hero.Items.ForEach(Console.WriteLine);
+                max = Hero.Items.Sum(x => x.Cost);
+                Console.WriteLine($"Max: {max}");
+                Console.WriteLine("-------------");
+            }
+            
+            Hero.Reset();
+        }
+        
+        return max;
     }
 
     public bool DoesHeroWin(Entity hero, Entity boss) {
@@ -83,8 +98,25 @@ class Solution : Solver {
         if (heroDamage <= 0) heroDamage = 1;
         var bossDamage = boss.Damage - hero.Armor;
         if (bossDamage <= 0) bossDamage = 1;
+
+        var heroWin = false;
+        var currentHero = hero.Health;
+        var currentBoss = boss.Health;
+        while (true) {
+            currentBoss -= heroDamage;
+            if (currentBoss <= 0) {
+                heroWin = true;
+                break;
+            }
+            
+            currentHero -= bossDamage;
+            if (currentHero <= 0) {
+                break;
+            }
+        }
         
-        return boss.Health / heroDamage <= hero.Health / bossDamage;
+        return heroWin;
+        // return boss.Health / heroDamage < (hero.Health / bossDamage);
     }
     
     public List<List<Item>> CalculatePermutations()
@@ -93,7 +125,7 @@ class Solution : Solver {
         
         foreach (var weapon in Weapons)
         {
-            var armorOptions = Armor.Prepend(null).ToList();
+            var armorOptions = Armor.Prepend(null);
 
             foreach (var armor in armorOptions)
             {
@@ -123,11 +155,11 @@ class Solution : Solver {
 
         for (int i = 0; i < Rings.Count; i++)
         {
-            combinations.Add(new List<Item> { Rings[i] });
+            combinations.Add([Rings[i]]);
 
             for (int j = i + 1; j < Rings.Count; j++)
             {
-                combinations.Add(new List<Item> { Rings[i], Rings[j] });
+                combinations.Add([Rings[i], Rings[j]]);
             }
         }
 
