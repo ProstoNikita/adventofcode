@@ -48,13 +48,12 @@ class Solution : Solver {
                 }
             }
 
-            var min = 0;
+            var min = int.MaxValue;
             foreach (var spellType in SpellTypes) {
                 if (SpellRequirements[SpellTypes.IndexOf(spellType)] <= heroMana &&
                     spellTimers[SpellTypes.IndexOf(spellType)] == 0) {
                     switch (spellType) {
                         case SpellType.MagicMissile:
-                            hi
                             break;
                         case SpellType.Drain:
                             break;
@@ -69,6 +68,12 @@ class Solution : Solver {
                     }
                 }
             }
+            return min;
+        } else {
+            
+            
+            
+            return 0;
         }
     }
 }
