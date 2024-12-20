@@ -58,10 +58,7 @@ class Solution : Solver {
             }
 
             if (DoesHeroWin(Hero, Boss) && min > Hero.Items.Sum(x => x.Cost)) {
-                Hero.Items.ForEach(Console.WriteLine);
                 min = Hero.Items.Sum(x => x.Cost);
-                Console.WriteLine($"Min: {min}");
-                Console.WriteLine("-------------");
             }
             
             Hero.Reset();
@@ -81,10 +78,7 @@ class Solution : Solver {
             }
 
             if (!DoesHeroWin(Hero, Boss) && max < Hero.Items.Sum(x => x.Cost)) {
-                Hero.Items.ForEach(Console.WriteLine);
                 max = Hero.Items.Sum(x => x.Cost);
-                Console.WriteLine($"Max: {max}");
-                Console.WriteLine("-------------");
             }
             
             Hero.Reset();

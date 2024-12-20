@@ -14,7 +14,6 @@ class Solution : Solver {
         var lines = input.Split('\n');
         foreach (var line in lines) {
             var instruction = manager.ParseInstruction(line);
-            Console.WriteLine(instruction);
             manager.AddToTree(instruction);
         }
         return manager.GetValue("a");
