@@ -9,6 +9,8 @@ using System.Text;
 
 [ProblemName("Wizard Simulator 20XX")]
 class Solution : Solver {
+    private int globalMin = int.MaxValue;
+    
     private Dictionary<SpellType, Spell> spells = new() {
         { SpellType.MagicMissile, new Spell { Type = SpellType.MagicMissile, IsEffect = false, SpellMana = 53 } },
         { SpellType.Drain, new Spell { Type = SpellType.Drain, IsEffect = false, SpellMana = 73 } },
@@ -21,12 +23,15 @@ class Solution : Solver {
 
     public object PartOne(string input) {
         var hero = new Entity {
-            Health = 10,
-            Mana = 250,
+            Health = 50,
+            Mana = 500,
         };
+        
+        var lines = input.Split('\n');
 
         var boss = new Entity {
-            Health = 13,
+            Health = int.Parse(lines[0].Split(' ')[2]),
+            Damage = int.Parse(lines[1].Split(' ')[1])
         };
 
         return CalculateMinMana(hero, boss, [], true);
@@ -37,6 +42,8 @@ class Solution : Solver {
     }
 
     public int CalculateMinMana(Entity hero, Entity boss, List<Spell> usedSpells, bool isPlayer) {
+        if (usedSpells.Sum(x => x.SpellMana) > globalMin) return int.MaxValue;
+        
         var min = int.MaxValue;
 
         if (isPlayer) {
@@ -65,19 +72,24 @@ class Solution : Solver {
                 }
                 
                 heroClone.Mana -= spell.SpellMana;
+                var usedSpellsCopy = usedSpells.Append(spell).ToList();
+                
                 Console.WriteLine($"{spell.Type} casted!");
 
+                var mana = usedSpellsCopy.Sum(x => x.SpellMana);
                 if (bossClone.Health <= 0) {
-                    return usedSpells.Sum(sp => sp.SpellMana);
+                    globalMin = Math.Min(globalMin, mana);
+                    return mana;
                 }
                 
                 heroClone.ApplyEffectsExcept(bossClone, spell.Type);
                 
                 if (bossClone.Health <= 0) {
-                    return usedSpells.Sum(sp => sp.SpellMana);
+                    globalMin = Math.Min(globalMin, mana);
+                    return mana;
                 }
                 
-                min = Math.Min(min, CalculateMinMana(heroClone, bossClone, usedSpells, false));
+                min = Math.Min(min, CalculateMinMana(heroClone, bossClone, usedSpellsCopy.Append(spell).ToList(), false));
             }
         } else {
             Console.WriteLine("-- Boss turn --");
@@ -96,7 +108,7 @@ class Solution : Solver {
             
             return heroClone.Health <= 0 ? int.MaxValue : CalculateMinMana(heroClone, bossClone, usedSpells, true);
         }
-
+        
         return min;
     }
 
